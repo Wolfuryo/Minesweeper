@@ -33,7 +33,7 @@ this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
 
 var time, c=0;
 
-var api="https://amicalf.000webhostapp.com/mineapi/";
+var api="";
 var elems={
 back:query(".back"),
 links:_query("nav>span"),
