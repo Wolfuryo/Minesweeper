@@ -18,7 +18,7 @@ Database connection
 $host='';
 $db='';
 $user='';
-$pass='';
+$pass='dsagdjskjdl354e./@%^&';
 $charset='utf8mb4';
 $dsn="mysql:host=$host;dbname=$db;charset=$charset";
 $options =[
