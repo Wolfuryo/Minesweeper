@@ -15,34 +15,35 @@
 <main>
 <nav>
 <div class="circle"></div>
-<span class="nav-play">Play</span>
-<span class="nav-rules">Rules</span>
-<span class="nav-lboards">Leaderboards</span>
-<span class="nav-settings">Settings</span>
+<span class="nav-play menu">Play</span>
+</span>
+<span class="nav-rules menu">Rules</span>
+<span class="nav-lboards menu">Leaderboards</span>
+<span class="nav-settings menu">Settings</span>
 </nav>
 <div class="screen screen1 play-screen">
 <div class="left-screen">
 <div class="pregame">
 <div class="form-gray"></div>
 <form>
-<span><label>Rows</label><input type="text" placeholder="Number of rows"/></span>
-<span><label>Columns</label><input type="text" placeholder="Number of columns"/></span>
-<span><label>Bombs</label><input type="text" placeholder="Number of bombs"/></span>
+<span><label>Rows</label><input type="text" placeholder="at most 30"/></span>
+<span><label>Columns</label><input type="text" placeholder="at most 30"/></span>
+<span><label>Bombs</label><input type="text" placeholder="at most 450"/></span>
 <span><input type="submit" value="Start"/></span>
 </form>
 <div class="presets">
 <div class="p-title">Presets</div>
 <span class="beginner">Beginner(8x8, 10 mines)</span>
 <span class="interm">Intermediate(16*16, 40)</span>
-<span class="expert">Expert(16*30, 90)</span>
+<span class="expert">Expert(16*30, 60)</span>
 </div>
 </div>
 <div class="game-stats">
-<span class="timer"><span class="label">Timer:</span><span class="minutes">00</span>:<span class="seconds">00</span></span>
-<span class="markers"><span class="label">Markers:</span><span class="markersn">0</span>
+<span class="timer"><span class="label">Timer:</span><span class="minutes">00</span><span class="seconds">00</span></span>
+<span class="markers"><span class="label">Markers:</span><span class="markersn">0</span></span>
 </div>
 </div>
-<div class="right-screen"><div class="win"></div>
+<div class="right-screen"><div class="win"></div><div class="end">The end is here :(</div>
 <div class="send_error"><span class="s_text">There was an error while trying to save your record.</span>
 <span class="sn_icon"></span>
 </div>
@@ -60,7 +61,7 @@
 <div class="board"></div>
 <span class="right-info">Use the menu on the left to select a preset or customize the number of rows, columns and mines</span></div>
 </div>
-<div class="screen screen2">
+<div class="screen screen3">
 <div class="rules-title">Minesweeper rules</div>
 <div class="rules">
 <div class="rule">
@@ -75,15 +76,20 @@
 <div class="rule-title">Clicking a square</div>
 <div class="rule-content">Clicking a square will reveal it according to the type that it has.</div>
 </div>
-<div class="rule">
-<div class="rule-title"></div>
-<div class="rule-content"></div>
 </div>
 </div>
+<div class="screen screen4">
+<div class="ld-title">Leaderboards</div>
+<div class="ld-menu">
+<span class="beg">Beginner</span>
+<span class="int">Intermediate</span>
+<span class="exp">Expert</span>
+<span class="others">Others</span>
 </div>
-<div class="screen screen3">Leaderboards screen</div>
-<div class="screen screen4">Settings screen</div>
+<div class="ld-items"></div>
+</div>
+<div class="screen screen5">Nothing here...yet</div>
 </main>
-<script src="game.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
