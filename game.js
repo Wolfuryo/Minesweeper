@@ -1,10 +1,15 @@
 function query(e){
-return document.querySelector(e);
+this.f=document.querySelector(e);
+if(this.f) return this.f;
+else console.log("query error:"+e);
 }
 function _query(e){
-return document.querySelectorAll(e);
+this.f=document.querySelectorAll(e);
+if(this.f && this.f.length) return this.f;
+else console.log("_query error:"+e);
 }
 function listen(elem, event, callback){
+console.log(elem);
 elem.addEventListener(event, function(e){
 callback(e);
 });
@@ -14,6 +19,8 @@ setTimeout(function(){
 cback();
 }, time);
 }
+
+var c=0;
 
 // Restricts input for the given textbox to the given inputFilter.
 function setInputFilter(textbox, inputFilter) {
@@ -31,12 +38,16 @@ this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
 });
 }
 
-var time, c=0;
+var time;
 
-var api="";
+var api="http://amicalf.000webhostapp.com/mineapi/";
+
+var camp=-1;
+
 var elems={
+recs:query(".ld-items"),
 back:query(".back"),
-links:_query("nav>span"),
+links:_query(".menu"),
 screens:_query(".screen"),
 nav:query("nav"),
 input:_query("input[type='text']"),
@@ -58,17 +69,19 @@ form_error:query(".i-label"),
 form_loader:query(".form_loader"),
 send_success:query(".send_success"),
 send_error:query(".send_error"),
+end:query(".end"),
+body:query("body"),
 };
 
-var won_temp='<span>You won</span><span class="win-time">Time:{time}</span>'+
+var won_temp='<span class="win-con"><span class="win-title">You won</span><span class="win-time">Time:{time}</span>'+
 '<span class="win-type">{x} by {y}, {b} bombs</span>'+
-'<span class="win-send">Save your score online</span>';
+'<span class="win-send">Save your score online</span>'+
+'<span class="win-go">Close</span></span>';
 
-var board=new Array();
 var presets={
 beginner:{rows:8, columns:8, bombs:10,},
 interm:{rows:16, columns:16, bombs:40,},
-expert:{rows:16, columns:30, bombs:90,},
+expert:{rows:16, columns:30, bombs:60,},
 };
 
 //returns a random number between min and max
@@ -76,6 +89,10 @@ function rand(min, max){
 min=Math.ceil(min);
 max=Math.floor(max);
 return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function rand_cell(d){
+return new pair(rand(1, d.rows), rand(1, d.columns));
 }
 
 //returns an array of n random numbers between min and max
@@ -115,15 +132,28 @@ render(i);
 })();
 
 //render the screens
+var story=0;
 function render(i){
 elems.screens[i].classList.add("current-screen");
 elems.back.classList.add("back-on");
+overflow(0);
+if(i==2) overflow(1);
+}
+
+//switch
+function overflow(q){
+if(q){
+elems.body.classList.add("oflow");
+} else {
+elems.body.classList.remove("oflow");
+}
 }
 
 //back button
 (function(){
 listen(elems.back, "click", function(){
 query(".current-screen").classList.remove("current-screen");
+overflow(0);
 elems.back.classList.remove("back-on");
 elems.nav.classList.remove("nav-out");
 })
@@ -137,20 +167,22 @@ e.preventDefault();
 rows=parseInt(elems.input[0].value) || 0;
 columns=parseInt(elems.input[1].value) || 0;
 bombs=parseInt(elems.input[2].value) || 0;
-if(rows<5) rc=5;
-if(columns<5) columns=5;
+if(rows<8) rc=8;
+if(columns<8) columns=8;
 if(bombs<10) bombs=10;
+if(columns>30) columns=30;
+if(rows>30) rows=30;
 if(bombs>(rows*columns/2)) bombs=rows*columns/2;
 elems._form.classList.add("form-hidden");
-data.rows=rows;
-data.columns=columns;
-data.bombs=bombs;
-start(data);
+data.rows=rows || 8;
+data.columns=columns || 8;
+data.bombs=bombs || 8;
+var ddd=new start(data);
 })
 for(var i=0;i<3;i++){
 (function(i){
 listen(elems.presets[i], "click", function(){
-start(presets[elems.presets[i].className]);
+var ccc=new start(presets[elems.presets[i].className]);
 elems._form.classList.add("form-hidden");
 })
 })(i);
@@ -170,20 +202,21 @@ return board[x][y]===-1;
 }
 
 //calculate the number of mines around every cell
-function calculate(d){
+function calculate(d, board){
+console.log(board);
 var b;
 for(var i=1;i<=d.rows;i++){
 for(var j=1;j<=d.columns;j++){
 if(!isb(board, i, j)){
 b=0;
-if(exists(d, i-1, j)) if(isb(board, i-1, j)) b++;
-if(exists(d, i+1, j)) if(isb(board, i+1, j)) b++;
-if(exists(d, i, j-1)) if(isb(board, i, j-1)) b++;
-if(exists(d, i, j+1)) if(isb(board, i, j+1)) b++;
-if(exists(d, i-1, j-1)) if(isb(board, i-1, j-1)) b++;
-if(exists(d, i+1, j-1)) if(isb(board, i+1, j-1)) b++;
-if(exists(d, i-1, j+1)) if(isb(board, i-1, j+1)) b++;
-if(exists(d, i+1, j+1)) if(isb(board, i+1, j+1)) b++;
+if(exists(d, i-1, j, board)) if(isb(board, i-1, j)) b++;
+if(exists(d, i+1, j, board)) if(isb(board, i+1, j)) b++;
+if(exists(d, i, j-1, board)) if(isb(board, i, j-1)) b++;
+if(exists(d, i, j+1, board)) if(isb(board, i, j+1)) b++;
+if(exists(d, i-1, j-1, board)) if(isb(board, i-1, j-1)) b++;
+if(exists(d, i+1, j-1, board)) if(isb(board, i+1, j-1)) b++;
+if(exists(d, i-1, j+1, board)) if(isb(board, i-1, j+1)) b++;
+if(exists(d, i+1, j+1, board)) if(isb(board, i+1, j+1)) b++;
 board[i][j]=b;
 }
 }
@@ -192,12 +225,11 @@ board[i][j]=b;
 
 //returns a cell
 function cell(x, y){
-//console.log(x+" "+y);
 return elems.lines[x-1].children[y-1];
 }
 
 //render the board
-function render_board(d){
+function render_board(d, board){
 var e="", q="<div class='board'>";
 for(var i=1;i<=d.rows;i++){
 e="";
@@ -213,12 +245,12 @@ elems.lines=_query(".line");
 }
 
 //Check if a given square has any adjacent square with no bombs
-function around_bombs(d, q, w){
+function around_bombs(d, q, w, board){
 var b=0, c=0, o, p;
 for(var i=0;i<8;i++){
 o=q+dir[i].x;
 p=w+dir[i].y;
-if(exists(d, q, w)){
+if(exists(d, q, w, board)){
 b++;
 if(isb(board, q, w)){
 c++;
@@ -232,24 +264,23 @@ return 0;
 }
 
 //move a bomb from position x, y
-function move(d, x, y, tl, br){
-console.log(x+":"+y);
+function move(d, x, y, tl, br, board){
 var b=0, q=rand(1, d.rows), w=rand(1, d.columns);
-while(isb(board, q, w) || around_bombs(d, q, w) || (x==q && y==w) || (q>=tl.x && q<=br.x && w>=tl.y && w<=br.y)){
+while(isb(board, q, w) || around_bombs(d, q, w, board) || (x==q && y==w) || (q>=tl.x && q<=br.x && w>=tl.y && w<=br.y)){
 q=rand(1, d.rows);
 w=rand(1, d.columns);
 }
-if(!isb(board, q, w) && !around_bombs(d, q, w) && !(x==q && y==w) && !(q>=tl.x && q<=br.x && w>=tl.y && w<=br.y)){
+if(!isb(board, q, w) && !around_bombs(d, q, w, board) && !(x==q && y==w) && !(q>=tl.x && q<=br.x && w>=tl.y && w<=br.y)){
 board[q][w]=-1;
 board[x][y]=0;
 }
 }
 
 //moves bombs in the cells between given corners
-function mover(tl, br, d){
+function mover(tl, br, d, board){
 for(var i=tl.x;i<=br.x;i++){
 for(var j=tl.y;j<=br.y;j++){
-if(isb(board, i, j)) move(d, i, j, tl, br);
+if(isb(board, i, j)) move(d, i, j, tl, br, board);
 }
 }
 }
@@ -266,7 +297,7 @@ a=a+(mode.x);
 b=b+(mode.y);
 return [a, b]
 };
-function first(d, x, y){
+function first(d, x, y, board){
 var depth=2;
 var q=x, w=y;
 var tl, br;
@@ -275,7 +306,7 @@ var p=modif(q, w, corners[0]);
 q=p[0];
 w=p[1];
 }
-while(!exists(d, q, w)){
+while(!exists(d, q, w, board)){
 q++;
 w++;
 }
@@ -287,17 +318,16 @@ var p=modif(q, w, corners[1]);
 q=p[0];
 w=p[1];
 }
-while(!exists(d, q, w)){
+while(!exists(d, q, w, board)){
 q--;
 w--;
 }
 br=new pair(q, w);
-mover(tl, br, d);
+mover(tl, br, d, board);
 }
 
 //reset everything for a new match
 function reset(){
-board=new Array();
 markers=0;
 c=0;
 elems.markers.innerHTML="0";
@@ -308,6 +338,8 @@ elems._form.classList.remove("form-hidden");
 
 //Victory :)
 function finish(d){
+elems.board.innerHTML="";
+elems.info.classList.remove("info-hidden");
 var cc=c;
 o=0;
 reset();
@@ -324,11 +356,14 @@ record(d, cc);
 
 //set up for saving the score online
 function record(d, cc){
-var send=query(".win-send");
+var send=query(".win-send"), go=query(".win-go");
 listen(send, "click", function(){
 elems.win.classList.remove("won");
 elems.send.classList.add("getting");
 send_form(d, cc);
+})
+listen(go, "click", function(){
+elems.win.classList.remove("won");
 })
 }
 
@@ -361,19 +396,27 @@ wait(2000, function(){
 elems.send_error.classList.remove("e_e_display");
 })
 }
+}, function(e){
+elems.send.classList.remove("getting");
+elems.send_error.classList.add("e_e_display");
+wait(2000, function(){
+elems.send_error.classList.remove("e_e_display");
+})
 })
 }
 })
 }
 
 //simple fetch wrapper
-function get(url, callback){
+function get(url, callback, error){
+error=error || {};
 fetch(url).then(function(response){
 return response.text();
 }).then(function(data){
 callback(data);
-});
-}
+}).catch(function(e){
+})
+};
 
 //show an error if the record can't be sent
 function send_error(){
@@ -383,25 +426,31 @@ elems.form_error.classList.remove("errored");
 })
 }
 
-//update the number of flags
-var markers=0;
-function update_markers(){
+function update_markers(markers){
 elems.markers.innerHTML=markers;
 }
 
 //end the game with a loss
 function end(){
-alert(0);
+o=0;
+reset();
+stop_timer();
+elems.end.classList.add("end_here");
+elems.board.innerHTML="";
+elems.info.classList.remove("info-hidden");
+wait(3000, function(){
+elems.end.classList.remove("end_here");
+})
 }
 
 //logic for clicking a cell
-function click(d, x, y){
+function click(d, x, y, board, markers){
 if(isb(board, x, y)){
 end();
 } else {
 if(board[x][y]===0){
 c=0;
-reveal(d, x, y);
+reveal(d, x, y, board, markers);
 } else {
 var c=cell(x, y);
 c.classList.add("no-rc");
@@ -411,20 +460,18 @@ c.classList.add("revealed");
 g++;
 }
 }
-if(done(d)){
-finish(d);
-}
+if(done(d, markers)) finish(d);
 }
 }
 
 var g=0;
 //check if the game is finished(every cell is revealed, except for the mines) and the mines are all marked
-function done(d){
+function done(d, markers){
 return (d.rows*d.columns-d.bombs)==_query(".revealed").length && d.bombs==markers;
 }
 
 //checks if the coords x and y exist in board
-function exists(d, x, y){
+function exists(d, x, y, board){
 return 1<=x && 1<=y && x<=d.rows && y<=d.columns;
 }
 
@@ -449,8 +496,8 @@ new pair(-1, 1),
 new pair(1, 1),
 new pair(1, -1),
 );
-function reveal(d, x, y){
-if(!exists(d, x, y)) return;
+function reveal(d, x, y, board, markers){
+if(!exists(d, x, y, board)) return;
 if(cell(x, y).classList.contains("fr") || board[x][y]!=0) return;
 if(c>=100000) return false;
 c++;
@@ -463,61 +510,61 @@ var q,w;
 for(var i=0;i<8;i++){
 q=x+dir[i].x;
 w=y+dir[i].y;
-if(exists(d, q, w) && !isb(board, q, w)){
+if(exists(d, q, w, board) && !isb(board, q, w)){
 if(!cell(q, w).classList.contains("revealed")){
 cell(q, w).classList.add("revealed");
 g++;
 }
 if(board[q][w]==0){
 (function(d, q, w){
-wait(1, function(){reveal(d, q, w)});
+wait(1, function(){reveal(d, q, w, board, markers, q)});
 })(d, q, w);
 } else {
 cell(q, w).innerHTML=board[q][w];
 }
 }
 }
-if(done(d)) finish();
+if(done(d, markers)) finish(d);
 }
 
 //set up playing events
 var o=0, x, y;
-function play_events(d){
-var cells=elems.cells, len=d.rows*d.columns;
+function play_events(d, board, markers){
+var cells, len=d.rows*d.columns;
+cells=elems.cells;
 for(var i=0;i<len;i++){
 (function(i){
 listen(cells[i], "click", function(){
+if(cells[i].classList.contains("marked")) return false;
 if(cells[i].classList.contains("clicked")) return false;
 cells[i].classList.add("clicked");
-if(!cells[i].classList.contains("marked")){
 x=parseInt(cells[i].getAttribute("data-x"));
 y=parseInt(cells[i].getAttribute("data-y"));
 if(o===0){
-first(d, x, y);
-calculate(d);
-click(d, x, y);
+first(d, x, y, board);
+calculate(d, board);
+click(d, x, y, board, markers);
 o=1;
 } else {
-click(d, x, y);
+click(d, x, y, board, markers);
 }
-}
-})
+});
 listen(cells[i], "mousedown", function(e){
 e.preventDefault();
 if(!cells[i].classList.contains("no-rc")){
-if(e.which==3){
+if(e.which==3 && !cells[i].classList.contains("revealed")){
 cells[i].classList.toggle("marked");
 if(cells[i].classList.contains("marked")){
 markers++;
 } else {
 markers--;
 }
-update_markers();
-if(done(d)) finish(d);
+update_markers(markers);
+if(done(d, markers)) finish(d);
 }
 }
 return false;
-})
+});
 listen(elems.board, "contextmenu", function(e){
 e.preventDefault();
 })
@@ -535,45 +582,125 @@ clearInterval(time);
 
 //start the timer
 function timer(){
+var m, s;
+this.p=0;
+m=elems.timer.mins;
+s=elems.timer.secs;
 var mins=0, secs=0;
+(function(p){
 time=setInterval(function(){
-c++;
-mins=parseInt(c/60);
-secs=c-mins*60;
+p++;
+mins=parseInt(p/60);
+secs=p-mins*60;
 if(mins<10){
-elems.timer.mins.innerHTML="0"+mins;
+m.innerHTML="0"+mins;
 } else {
-elems.timer.mins.innerHTML=mins;
+m.innerHTML=mins;
 }
 if(secs<10){
-elems.timer.secs.innerHTML="0"+secs;
+s.innerHTML="0"+secs;
 } else {
-elems.timer.secs.innerHTML=secs;
+s.innerHTML=secs;
 }
 }, 1000);
+})(this.p);
+return this;
 }
 
 //start the game
 function start(d){
+o=0;
 timer();
+this.markers=0;
+this.board=new Array();
 var cells=d.rows*d.columns;
-var bombs=nrand(d.bombs, 1, cells);
+this.bombs=nrand(d.bombs, 1, cells);
 for(var i=1;i<=d.bombs;i++){
-bombs[i]=new pair(parseInt(bombs[i]/d.columns)===(bombs[i]/d.columns)?(bombs[i]/d.columns):(parseInt(bombs[i]/d.columns)+1), bombs[i]%d.columns===0?d.columns:bombs[i]%d.columns);
+this.bombs[i]=new pair(parseInt(this.bombs[i]/d.columns)===(this.bombs[i]/d.columns)?(this.bombs[i]/d.columns):(parseInt(this.bombs[i]/d.columns)+1), this.bombs[i]%d.columns===0?d.columns:this.bombs[i]%d.columns);
 }
 
 for(var i=1;i<=d.rows;i++){
-board[i]=[];
+this.board[i]=[];
 for(var j=1;j<=d.columns;j++){
-board[i][j]=0;
+this.board[i][j]=0;
 }
 }
 
 for(var i=1;i<=d.bombs;i++){
-board[bombs[i].x][bombs[i].y]=-1;
+this.board[this.bombs[i].x][this.bombs[i].y]=-1;
 }
 
-render_board(d);
-play_events(d);
+render_board(d, this.board);
 
+play_events(d, this.board, this.markers);
+}
+
+//initial load of leaderboards data
+(function(){
+get(api+"get.php", function(d){
+records(JSON.parse(d));
+})
+})();
+
+//compare 2 objects
+function comp(ob1, ob2){
+var k1=Object.keys(ob1), k2=Object.keys(ob2), len=k1.length;
+if(len!=k2.length) return 0;
+for(var i=0;i<len;i++){
+if(ob1[k1[i]] !=ob2[k1[i]]){
+return 0;
+break;
+}
+}
+return 1;
+}
+
+//parse the leaderboards data, separate it and add events
+function records(d){
+var beg=[], int=[], exp=[], oth=[], len=d.length, aux={};
+for(var i=0;i<len;i++){
+aux.rows=d[i].rws;
+aux.columns=d[i].columns;
+aux.bombs=d[i].bombs;
+if(comp(aux, presets.beginner)){
+beg.push(d[i]);
+} else {
+if(comp(aux, presets.beginner)){
+int.push(d[i]);
+} else {
+if(comp(aux, presets.expert)){
+exp.push(d[i]);
+} else {
+oth.push(d[i]);
+}
+}
+}
+}
+var menus=_query(".ld-menu>span");
+listen(menus[0], "click", function(){
+render_rec(beg);
+})
+listen(menus[1], "click", function(){
+render_rec(int);
+})
+listen(menus[2], "click", function(){
+render_rec(exp);
+})
+listen(menus[3], "click", function(){
+render_rec(oth);
+})
+}
+
+//render game records(array of objects with data about each record)
+var rec_temp="<span class='item-name'>{name}</span><span class='item-time'>{time}s</span>";
+function render_rec(d){
+var len=d.length, q;
+elems.recs.innerHTML="";
+for(var i=0;i<len;i++){
+q=document.createElement("div");
+q.classList.add("rec-item");
+q.innerHTML=rec_temp.replace("{name}", d[i].user).replace("{time}", d[i].time);
+elems.recs.appendChild(q);
+}
+if(!len) elems.recs.innerHTML="<span>No records in this category</span>";
 }
